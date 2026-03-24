@@ -11,4 +11,4 @@ while True:
     del clientsocket
     print("connected, waiting for a recieveAll()...")
     recvData = client.recieveUTF8()
-    print(f"client message: {recvData}")
+    print(f"client message (surrounded by '): '{recvData}'")

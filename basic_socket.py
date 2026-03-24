@@ -1,10 +1,7 @@
 import socket
-import struct
 # bytes 1-4 are an unsigned 32 bit length. maybe a bit overkill, but i think it's fine.
 
 
-
-# this is broken and im gonna take a break.
 class BasicSocket:
     def __init__(self, sock=None):
         if sock is None:
@@ -15,12 +12,12 @@ class BasicSocket:
     def connect(self, host, port):
         self.sock.connect((host, port))
 
-    def sendUTF8(self, msg):
+    def sendUTF8(self, msg:str):
         lengthBytesSent = 0
         charsSend = 0
-        textLength = len(bytes(msg, encoding="utf-8"))
-        print(bytes(str(msg), encoding="utf-8"), textLength)
-        lengthBytes = bytes(socket.htonl(textLength))
+        textLength = len(msg.encode("utf-8"))
+        print(textLength)
+        lengthBytes = textLength.to_bytes(4, "big", signed=False)
         print(lengthBytes)
         while lengthBytesSent < 4:
             sent = self.sock.send(lengthBytes[lengthBytesSent:])
@@ -30,12 +27,12 @@ class BasicSocket:
             print(lengthBytesSent, lengthBytes[lengthBytesSent:])
         print(len(msg), charsSend < len(msg))
         while charsSend < len(msg):
-            print(charsSend < len(msg), bytes(msg[charsSend:], encoding="utf-8"))
-            sent = self.sock.send(bytes(msg[charsSend:], encoding="utf-8"))
+            print(charsSend < len(msg), msg[charsSend:].encode("utf-8"))
+            sent = self.sock.send(msg[charsSend:].encode("utf-8"))
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             charsSend += sent
-            print(charsSend, bytes(msg[charsSend:], encoding="utf-8"))
+            print(charsSend, msg[charsSend:].encode("utf-8"))
         print("finished sending")
 
     def recieveUTF8(self):
@@ -48,14 +45,15 @@ class BasicSocket:
             print(chunk)
             if chunk == b'':
                 raise RuntimeError("socket connection broken")
-            lengthBytes.__add__(chunk)
+            lengthBytes += chunk
             bytesRecieved += len(chunk)
-
-        textLength = int.from_bytes(lengthBytes, "big", signed=True)
-        print(textLength, bytesRecieved, textLength + 4)
-        while bytesRecieved < textLength + 4:
-            chunks = [] # we don't want the length bytes to be interpreted as part of the string
-            chunk = self.sock.recv(min(textLength - bytesRecieved, 2048))
+        print(lengthBytes)
+        textLength = int.from_bytes(lengthBytes, "big", signed=False)
+        print(textLength, bytesRecieved, textLength - 4)
+        chunks = [] # we don't want the length bytes to be interpreted as part of the string
+        while bytesRecieved-4 < textLength:
+            chunk = self.sock.recv(min(textLength - bytesRecieved + 4, 2048))
+            print(chunk)
             if chunk == b'':
                 raise RuntimeError("socket connection broken")
             chunks.append(chunk)
