@@ -28,23 +28,23 @@ class BasicSocket:
                 raise RuntimeError("socket connection broken")
             charsSend += sent
 
-    def recieveUTF8(self):
+    def receiveUTF8(self):
         chunks = []
         lengthBytes:bytes = b""
-        bytesRecieved = 0
+        bytesreceived = 0
         textLength = 0
-        while bytesRecieved < 4:
-            chunk = self.sock.recv(4-bytesRecieved)
+        while bytesreceived < 4:
+            chunk = self.sock.recv(4-bytesreceived)
             if chunk == b'':
                 raise RuntimeError("socket connection broken")
             lengthBytes += chunk
-            bytesRecieved += len(chunk)
+            bytesreceived += len(chunk)
         textLength = int.from_bytes(lengthBytes, "big", signed=False)
         chunks = [] # we don't want the length bytes to be interpreted as part of the string
-        while bytesRecieved-4 < textLength:
-            chunk = self.sock.recv(min(textLength - bytesRecieved + 4, 2048))
+        while bytesreceived-4 < textLength:
+            chunk = self.sock.recv(min(textLength - bytesreceived + 4, 2048))
             if chunk == b'':
                 raise RuntimeError("socket connection broken")
             chunks.append(chunk)
-            bytesRecieved += len(chunk)
+            bytesreceived += len(chunk)
         return str(b''.join(chunks), encoding="utf-8")
