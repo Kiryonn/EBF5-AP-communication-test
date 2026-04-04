@@ -10,7 +10,7 @@ while True:
     (clientsocket, address) = server.sock.accept()
     client = BasicSocket(clientsocket)
     del clientsocket
-    print("connected, waiting for a receiveAll()...")
+    print("connected, waiting to receive data...")
     recvData = client.receiveUTF8()
     print(f"client message: \"{recvData}\"")
     print(f"sending \"{pingMessage}\"")
