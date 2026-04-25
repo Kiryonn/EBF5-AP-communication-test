@@ -58,6 +58,7 @@ def test_server():
                 client.send_utf8(PING_MSG)
             except SocketConnectionBrokenError:
                 log(CLIENT_CONNECTION_FAILED)
+                client.close()
                 client = None
                 continue
 
