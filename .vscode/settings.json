@@ -1,6 +1,8 @@
 {
     "python.REPL.enableREPLSmartSend": false,
     "[python]": {
-        "editor.defaultFormatter": "charliermarsh.ruff"
-    }
+        "editor.defaultFormatter": "charliermarsh.ruff",
+    },
+    "autoDocstring.docstringFormat": "sphinx",
+    "autoDocstring.generateDocstringOnEnter": true
 }

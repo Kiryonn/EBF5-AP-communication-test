@@ -1,6 +1,8 @@
 from socket import socket as Socket, AF_INET, SOCK_STREAM, SHUT_RDWR
 # bytes 1-4 are an unsigned 32 bit length. maybe a bit overkill, but i think it's fine.
 
+HEADER_SIZE = 4  # n bytes for the size (int) of the payload to receive / send
+
 
 class SocketConnectionBrokenError(RuntimeError):
     def __init__(self, *args):
@@ -8,6 +10,8 @@ class SocketConnectionBrokenError(RuntimeError):
 
 
 class BasicSocket:
+    """A socket wrapper class with basic functions"""
+
     def __init__(self, sock: Socket = None, *, timeout: float = -1):
         self.sock: Socket = Socket(AF_INET, SOCK_STREAM) if sock is None else sock
         if timeout >= 0:
@@ -26,11 +30,9 @@ class BasicSocket:
     def _send_all(self, data: bytes):
         """Sends bytes using the socket connection
 
-        Args:
-            data (bytes): the utf-8 message in bytes form
-
-        Raises:
-            SocketConnectionBrokenError: socket connection is broken/interrupted
+        :param data: the utf-8 message in bytes form
+        :type data: bytes
+        :raises SocketConnectionBrokenError: socket connection is broken/interrupted
         """
         view = memoryview(data)  # zero-copy when slicing bellow
         total = 0
@@ -43,14 +45,11 @@ class BasicSocket:
     def _recv_exact(self, n: int) -> bytes:
         """Attempt to receive an exact number of bytes
 
-        Args:
-            n (int): the number of bytes awaited
-
-        Raises:
-            SocketConnectionBrokenError: socket connection is broken/interrupted
-
-        Returns:
-            bytes: the bytes received
+        :param n: the number of bytes awaited
+        :type n: int
+        :raises SocketConnectionBrokenError: socket connection is broken/interrupted
+        :return: the bytes received
+        :rtype: bytes
         """
         buf = bytearray(n)
         view = memoryview(buf)  # zero-copy when slicing bellow
@@ -65,13 +64,25 @@ class BasicSocket:
     # ----- protocol -----
 
     def send_utf8(self, msg: str) -> None:
+        """Sends a message with utf-8 encoding
+
+        :param msg: the messgae to send
+        :type msg: str
+        :raises SocketConnectionBrokenError: socket connection is broken/interrupted while writing the message
+        """
         data = msg.encode("utf-8")
-        header = len(data).to_bytes(4, "big", signed=False)
+        header = len(data).to_bytes(HEADER_SIZE, "big", signed=False)
         self._send_all(header)
         self._send_all(data)
 
     def receive_utf8(self) -> str:
-        header = self._recv_exact(4)
+        """Returns the next received utf-8 message
+
+        :raises SocketConnectionBrokenError: socket connection is broken/interrupted while reading the message
+        :return: The received message
+        :rtype: str
+        """
+        header = self._recv_exact(HEADER_SIZE)
         length = int.from_bytes(header, "big", signed=False)
         data = self._recv_exact(length)
         return data.decode("utf-8")
