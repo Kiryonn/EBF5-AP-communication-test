@@ -30,7 +30,7 @@ class BasicSocket:
     def _send_all(self, data: bytes):
         """Sends bytes using the socket connection
 
-        :param data: the utf-8 message in bytes form
+        :param data: the bytes of the message to send
         :type data: bytes
         :raises SocketConnectionBrokenError: socket connection is broken/interrupted
         """
